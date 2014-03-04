@@ -1,0 +1,75 @@
+package gui;
+import game.*;
+import board.*;
+
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import pieces.*;
+import player.*;
+public class Controller implements MouseListener{
+	
+	protected Game game;
+	protected Gui gui;
+	protected Point firstClick;
+	protected Point secondClick;
+	
+	public Controller() {    	
+	    game = new Game();
+	    gui = new Gui(this);
+	    firstClick = null;
+	    secondClick = null;
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		Board board = game.getBoard();
+		Player player = game.getCurrentPlayer();
+		ModifiedJPanel panel = (ModifiedJPanel)arg0.getSource();
+		int x = panel.getRelativeX();
+	    int y = panel.getRelativeY();
+	    Piece piece = board.getPiece(y, x);
+	    if (piece == null && firstClick == null)
+	    	return;
+	    else if (firstClick == null)
+	    {
+	    	if (piece.getTeam().equals(player.getTeam()))
+	    		firstClick = new Point(x,y);
+	    }
+	    System.out.println(x + ", " + y);
+	    System.out.println(board.getPiece(y, x).getType());	    
+	}
+	
+	public void moveBackboard(int x, int y)
+	{
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
+
+}

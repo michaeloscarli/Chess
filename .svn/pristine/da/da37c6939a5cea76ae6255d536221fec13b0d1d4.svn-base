@@ -1,0 +1,128 @@
+package gui;
+import game.*;
+import board.*;
+
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JLabel;
+
+import pieces.*;
+import player.*;
+public class Controller implements MouseListener{
+	
+	protected Game game;
+	protected Gui gui;
+	protected Point firstClick;
+	protected Point secondClick;
+	protected ModifiedJPanel sourcePanel;
+	
+	public Controller() { 
+		firstClick = null;
+	    secondClick = null;
+	    sourcePanel = null;
+	    gui = new Gui(this);
+	    game = new Game();
+	    game.startLoop();
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		Board board = game.getBoard();
+		Player player = game.getCurrentPlayer();
+		ModifiedJPanel panel = (ModifiedJPanel)arg0.getSource();
+		int x = panel.getRelativeX();
+	    int y = panel.getRelativeY();
+	    Piece piece = board.getPiece(y, x);
+	    if (firstClick == null && piece == null)
+	    {
+	    	System.out.println("null click");
+	    	return;
+	    }
+	    else if (firstClick == null)
+	    {
+	    	System.out.println("Current player: " + player.getTeam());
+	    	if (piece.getTeam().equals(player.getTeam()))
+	    	{
+	    		System.out.println("This piece's moveList is: " + piece.getMoveList());
+	    		firstClick = new Point(x,y);
+	    		sourcePanel = panel;
+	    	}
+	    }
+	    else if (firstClick != null)
+	    {
+	    	secondClick = new Point(x,y);
+	    }
+	    System.out.println(firstClick + " " + secondClick);
+	    if (firstClick!=null && secondClick!=null)
+	    {
+	    	if (moveBackboard(firstClick, secondClick))
+	    		moveGUIBoard(firstClick, secondClick);
+	    	firstClick = null;
+			secondClick = null;
+			sourcePanel = null;
+	    }	    
+	}
+	
+	public boolean moveBackboard(Point source, Point target)
+	{
+		int targetX = (int)target.getX();
+		int targetY = (int)target.getY();
+		Board board = game.getBoard();
+		System.out.println("Got to moveBackboard");
+		Piece piece = board.getPiece((int)source.getY(), (int)source.getX());
+		System.out.println("I just moved: " + piece.getType() + " " + piece.getTeam());
+		if (game.isValidMove(piece, targetY, targetX))
+		{
+			board.move(piece, targetY, targetX);
+			return true;
+		}
+		return false;
+	}
+	
+	public void moveGUIBoard(Point source, Point target)
+	{
+		int targetX = (int)target.getX();
+		int targetY = (int)target.getY();
+		Board board = game.getBoard();
+		System.out.println("Got to moveGUIBoard");
+		System.out.println("My targetX and targetY are: " + targetX + ", " + targetY);
+
+		System.out.println("Source coordinates: " + source.getX() + " " + source.getY());
+		System.out.println("The piece just moved was: " + board.getPiece(targetY, targetX).getType());
+		JLabel label = board.getPiece(targetY, targetX).getIcon();
+		gui.placeImage(label, targetX, targetY);
+		sourcePanel.removeAll();
+		sourcePanel.validate();
+		sourcePanel.repaint();
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
+
+}

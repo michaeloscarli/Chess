@@ -1,0 +1,126 @@
+package tests;
+
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import pieces.*;
+import board.*;
+import game.*;
+
+public class GameTests {
+
+	Game game;
+	
+	@Before public void setup() throws Exception
+	{
+		game = new Game();
+	}
+
+	/**
+	 * Tests the Game's constructor by checking its initializations
+	 */
+	@Test
+	public void gameConstructorTest()
+	{
+		assertEquals(game.getBoard().getWhitePlayer(), game.getCurrentPlayer());
+		game.incrementTurn();
+		assertEquals(game.getBoard().getBlackPlayer(), game.getCurrentPlayer());
+	}
+	
+	/**
+	 * Tests the Game's ability to detect a king in check
+	 */
+	@Test
+	public void isInCheckTest()
+	{
+		//A king that is in checkmate should also be in check
+		Board board = new Board();
+		board.setupPlayers();
+		board.setupSpaces(board.getBoard());
+		board.updateAllLists();
+		King king = new King(0,7,"black");
+		board.addPiece(king,0,7);
+		board.addPiece(new Queen(0,0,"white"),0,0);
+		board.addPiece(new Queen(1,0,"white"),1,0);
+		assertEquals(true, game.isInCheck(board, board.getBlackPlayer()));
+		
+		
+		//Initial positions should not put the King into check
+		board = game.getBoard();
+		assertEquals(false, game.isInCheck(board, board.getBlackPlayer()));
+		assertEquals(false, game.isInCheck(board, board.getWhitePlayer()));
+		
+		//A king that is threatened should be in check
+		board.addPiece(new King(4,4,"black"),4,4);
+		board.addPiece(new Pawn(5,5,"white"),5,5);
+		assertEquals(true, game.isInCheck(board, board.getBlackPlayer()));
+		
+		//if we remove the pawn the king should no longer be in check
+		board.removePiece(5, 5);
+		assertEquals(false, game.isInCheck(board, board.getBlackPlayer()));
+
+	}
+	
+	/**
+	 * Tests the Game's ability to detect a king in checkmate
+	 */
+	@Test
+	public void isCheckmateTest()
+	{
+		//An initial setup should not trigger a checkmate
+		Board board = game.getBoard();
+		assertEquals(false, game.isCheckmate(board, board.getBlackPlayer()));
+		assertEquals(false, game.isCheckmate(board, board.getWhitePlayer()));
+		
+		//The game should acknowledge when a king is in checkmate
+		board = new Board();
+		board.setupPlayers();
+		board.setupSpaces(board.getBoard());
+		board.updateAllLists();
+		King king = new King(0,7,"black");
+		board.addPiece(king,0,7);
+		board.addPiece(new Queen(1,5,"white"),1,5);
+		board.addPiece(new Queen(2,7,"white"),2,7);
+		assertEquals(true, game.isCheckmate(board, board.getBlackPlayer()));
+		
+		//if the King can move away, then it is not a checkmate
+		board.removePiece(1, 5);
+		assertEquals(false, game.isCheckmate(board, board.getBlackPlayer()));
+		
+		//if a piece can come save the king, then it is not a checkmate
+		board.removePiece(2, 7);
+		board.addPiece(new Queen(0,0,"white"),0,0);
+		board.addPiece(new Queen(1,0,"white"),1,0);
+		assertEquals(true, game.isCheckmate(board, board.getBlackPlayer()));
+		board.addPiece(new Rook(5,3,"black"),5,3);
+		assertEquals(false, game.isCheckmate(board, board.getBlackPlayer()));
+	}
+	
+	/**
+	 * Tests the game's ability to determine if a move is valid or not
+	 */
+	@Test
+	public void isValidMoveTest()
+	{
+		Board board = new Board();
+		board.setupPlayers();
+		board.setupSpaces(board.getBoard());
+		board.updateAllLists();
+		King king = new King(0,7,"black");
+		board.addPiece(king,0,7);
+		board.addPiece(new Queen(0,0,"white"),0,0);
+		board.addPiece(new Queen(1,0,"white"),1,0);
+		assertEquals(true, game.isCheckmate(board, board.getBlackPlayer()));
+		Rook rook = new Rook(0,1,"black");
+		board.addPiece(rook,0,1);
+		assertEquals(false, game.isCheckmate(board, board.getBlackPlayer()));
+		System.out.println(game.getCurrentPlayer().getTeam());
+		System.out.println(rook.getMoveList());
+		assertEquals(false,game.isValidMove(rook, 5, 5));
+		assertEquals(false,game.isValidMove(rook, 2, 1));
+		
+	}
+	
+}

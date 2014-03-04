@@ -1,0 +1,290 @@
+package board;
+import pieces.*;
+import player.*;
+
+import java.awt.Point;
+import java.util.ArrayList;
+public class Board {
+	public static final int BOARD_LENGTH = 8;
+	protected Space[][] board;
+	protected Player blackPlayer;
+	protected Player whitePlayer;
+	
+	/**
+	 * Constructor for board. Initializes the spaces and places the starting pieces.
+	 */
+	public Board()
+	{
+		board = new Space[BOARD_LENGTH][BOARD_LENGTH];
+	}
+	
+	/**
+	 * Sets up the initial condition of the board.
+	 * Initializes the spaces and places the starting pieces.
+	 * Also updates all pieceLists
+	 */
+	public void setupAll()
+	{
+		setupPlayers();
+		setupSpaces(board);
+		setupBlack(board);
+		setupWhite(board);
+		updateAllLists();
+	}
+	
+	/**
+	 * @return, the 2d Space array representing the board
+	 */
+	public Space[][] getBoard()
+	{
+		return board;
+	}
+	/**
+	 * Gets a piece from the board
+	 * @param x, the xcoordinate on the board
+	 * @param y, the ycoordinate on the board
+	 * @return the piece in the location, null otherwise
+	 */
+	public Piece getPiece(int x, int y)
+	{
+		return board[x][y].getPiece();
+	}
+	
+	/**
+	 * @return returns the white Player
+	 */
+	public Player getWhitePlayer()
+	{
+		return whitePlayer;
+	}
+	
+	/**
+	 * @return returns the black Player
+	 */
+	public Player getBlackPlayer()
+	{
+		return blackPlayer;
+	}
+	
+	/**
+	 * Checks if a space is occupied
+	 * @param x, target x-coordinate
+	 * @param y, target y-coordinate
+	 * @return true if the space is occupied, otherwise false
+	 */
+	public boolean isOccupied(int x, int y)
+	{
+		return board[x][y].isOccupied();
+	}
+
+	/**
+	 * Adds a piece to the board and to the corresponding pieceList
+	 * @param piece, the piece to be added
+	 * @param x, target x-coordinate for the piece
+	 * @param y, target y-coordinate for the piece
+	 */
+	public void addPiece(Piece piece, int x, int y)
+	{
+		if (board[x][y].isOccupied())
+			return;
+		board[x][y].setPiece(piece);
+		board[x][y].changeOccupation(true);
+		if (piece.getTeam()=="black")
+			blackPlayer.addToList(piece);
+		else
+			whitePlayer.addToList(piece);
+		updateAllLists();
+	}
+	
+	/**
+	 * Removes the piece from the board, opens up the space, and removes it from its pieceList
+	 * @param x, the x-coordinate of the piece to be removed
+	 * @param y, the y-coordinate of the piece to be removed
+	 */
+	public void removePiece(int x, int y)
+	{
+		Piece piece = getPiece(x,y);
+		if (piece == null)
+			return;
+		if (piece.getTeam()=="black")
+			blackPlayer.removeFromList(piece);
+		else
+			whitePlayer.removeFromList(piece);
+		board[x][y].setPiece(null);
+		board[x][y].changeOccupation(false);
+		updateAllLists();
+	}
+	
+	/**
+	 * Determines if a given point is in a player's move list
+	 * @param point, the point we are searching for a match for
+	 * @return true if the point is in any of the moveLists, false otherwise
+	 */
+	public boolean isInEntireMoveList(Point point, Player player)
+	{
+		ArrayList<Piece> pieces = player.getPieceList();
+		for(int index = 0; index < pieces.size(); index++)
+		{
+			ArrayList<Point> moves = pieces.get(index).getMoveList();
+			for (int move = 0; move < moves.size(); move++ )
+			{
+				if (moves.get(move).equals(point))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * updates all the moveLists of all the pieces on the board
+	 */
+	public void updateAllLists()
+	{
+		ArrayList<Piece> blackPieces = blackPlayer.getPieceList();
+		ArrayList<Piece> whitePieces = whitePlayer.getPieceList();
+		for(int index = 0; index < blackPieces.size(); index++)
+		{
+			Piece black = blackPieces.get(index);
+			black.updateMoveList(black.getXLocation(), black.getYLocation(), this);
+		}
+		for(int index = 0; index < whitePieces.size(); index++)
+		{
+			Piece white = whitePieces.get(index);
+			white.updateMoveList(white.getXLocation(), white.getYLocation(), this);
+		}
+	}
+	
+	/**
+	 * Moves a specified piece, updates the spaces, and removes a piece if it was there
+	 * @param piece, the piece to be moved
+	 * @param newX, the new x-coordinate of the piece
+	 * @param newY, the new y-coordinate of the piece
+	 * @return True if the move was successful, false otherwise
+	 */
+	public boolean move(Piece piece, int newX, int newY)
+	{
+		int oldX = piece.getXLocation();
+		int oldY = piece.getYLocation();
+		if (newX == oldX && newY == oldY)
+			return true;
+		removePiece(newX,newY);
+		board[oldX][oldY].setPiece(null);
+		board[oldX][oldY].changeOccupation(false);
+		board[newX][newY].setPiece(piece);
+		board[newX][newY].changeOccupation(true);
+		piece.movePiece(newX, newY);
+		updateAllLists();
+		return true;
+	}
+	
+	/**
+	 * Sets up the initial black pieces and compiles a list of blackPieces
+	 * @param board, the board to be played on
+	 */
+	private void setupBlack(Space[][] board)
+	{
+		ArrayList<Piece> blackPieceList = blackPlayer.getPieceList();
+		for (int x = 0; x < BOARD_LENGTH; x++)
+		{
+			Pawn pawn = new Pawn(x,1, "black");
+			board[x][1] = new Space(true, pawn);
+			blackPieceList.add(pawn);
+		}
+		
+		Knight knight = new Knight(1,0, "black"); 
+		board[1][0] = new Space(true, knight);
+		blackPieceList.add(knight);
+		knight = new Knight(6,0, "black"); 
+		board[6][0] = new Space(true, knight);
+		blackPieceList.add(knight);
+		
+		Bishop bishop = new Bishop(2,0, "black");
+		board[2][0] = new Space(true, bishop);
+		blackPieceList.add(bishop);
+		bishop = new Bishop(5,0, "black");
+		board[5][0] = new Space(true, bishop);
+		blackPieceList.add(bishop);
+		
+		Rook rook = new Rook(0,0, "black");
+		board[0][0] = new Space(true, rook);
+		blackPieceList.add(rook);
+		rook = new Rook(7,0, "black");
+		board[7][0] = new Space(true, rook);
+		blackPieceList.add(rook);
+		
+		Queen queen = new Queen(3,0, "black");
+		board[3][0] = new Space(true, queen);
+		blackPieceList.add(queen);
+		King king = new King(4,0, "black");
+		board[4][0] = new Space(true, king);
+		blackPieceList.add(king);		
+	}
+	
+	/**
+	 * Sets up the initial white pieces and compiles a list of whitePieces
+	 * @param board, the board to be played on
+	 */
+	private void setupWhite(Space[][] board)
+	{
+		ArrayList<Piece> whitePieceList = whitePlayer.getPieceList();
+		for (int x = 0; x<BOARD_LENGTH; x++)
+		{
+			Pawn pawn = new Pawn(x,6,"white");
+			board[x][6] = new Space(true, pawn);
+			whitePieceList.add(pawn);
+		}
+		
+		Knight knight = new Knight(1,7, "white");
+		board[1][7] = new Space(true, knight);
+		whitePieceList.add(knight);
+		knight = new Knight(6,7, "white");
+		board[6][7] = new Space(true, knight);
+		whitePieceList.add(knight);
+		
+		Bishop bishop = new Bishop(2,7, "white");
+		board[2][7] = new Space(true, bishop);
+		whitePieceList.add(bishop);
+		bishop = new Bishop(5,7,"white");
+		board[5][7] = new Space(true, bishop);
+		whitePieceList.add(bishop);
+		
+		Rook rook = new Rook(0,7, "white");
+		board[0][7] = new Space(true, rook);
+		whitePieceList.add(rook);
+		rook = new Rook(7,7,"white");
+		board[7][7] = new Space(true, rook);
+		whitePieceList.add(rook);
+		
+		Queen queen = new Queen(3,7,"white");
+		board[3][7] = new Space(true, queen);
+		whitePieceList.add(queen);
+		King king = new King(4,7,"white");
+		board[4][7] = new Space(true, king);
+		whitePieceList.add(king);
+	}
+	
+	/**
+	 * Sets up all the initial empty spaces on the board
+	 * @param board, the board to be played on
+	 */
+	public void setupSpaces(Space[][] board)
+	{
+		for (int x = 0; x < BOARD_LENGTH; x++)
+		{
+			for (int y = 0; y < BOARD_LENGTH; y++)
+			board[x][y] = new Space();
+		}
+	}
+	
+	/**
+	 * Sets up all the initial players
+	 */
+	public void setupPlayers()
+	{
+		blackPlayer = new Player("black");
+		whitePlayer = new Player("white");
+	}
+	
+}

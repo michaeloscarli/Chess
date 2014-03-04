@@ -1,0 +1,200 @@
+package gui;
+import game.*;
+import board.*;
+
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JLabel;
+
+import pieces.*;
+import player.*;
+public class Controller implements MouseListener{
+	
+	protected Game game;
+	protected Gui gui;
+	protected Point firstClick;
+	protected Point secondClick;
+	protected ModifiedJPanel sourcePanel;
+	
+	/**
+	 * Constructor for the controller class, instantiates the game, the gui, and starts the gameloop
+	 */
+	public Controller() { 
+		firstClick = null;
+	    secondClick = null;
+	    sourcePanel = null;
+	    gui = new Gui(this);
+	    game = new Game();
+	    addNewGameListener();
+	    addForfeitGameListener();
+	    addUndoListener();
+	    addTieListener();
+	    game.startLoop();
+	}
+
+	/**
+	 * Receives x and y data from mouse clicks and feeds it into the game loop
+	 */
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		Board board = game.getBoard();
+		Player player = game.getCurrentPlayer();
+		ModifiedJPanel panel = (ModifiedJPanel)arg0.getSource();
+		int x = panel.getRelativeX();
+	    int y = panel.getRelativeY();
+	    Piece piece = board.getPiece(y, x);
+	    if (firstClick == null && piece == null)
+	    {
+	    	System.out.println("null click");
+	    	return;
+	    }
+	    else if (firstClick == null)
+	    {
+	    	System.out.println("Current player: " + player.getTeam());
+	    	if (piece.getTeam().equals(player.getTeam()))
+	    	{
+	    		firstClick = new Point(x,y);
+	    		sourcePanel = panel;
+	    	}
+	    }
+	    else if (firstClick != null)
+	    {
+	    	secondClick = new Point(x,y);
+	    }
+	    System.out.println(firstClick + " " + secondClick);
+	    if (firstClick!=null && secondClick!=null)
+	    {
+	    	if (moveBackboard(firstClick, secondClick))
+	    	{
+	    		moveGUIBoard(firstClick, secondClick);
+	    		game.incrementTurn();
+	    	}
+	    	firstClick = null;
+			secondClick = null;
+			sourcePanel = null;
+	    }	    
+	}
+	
+	/**
+	 * Moves the pieces that are on the backboard
+	 * @param source, the location of the piece we are moving
+	 * @param target, the destination of the piece we are moving
+	 * @return true if the move was successfully completed, false otherwise
+	 */
+	public boolean moveBackboard(Point source, Point target)
+	{
+		int targetX = (int)target.getX();
+		int targetY = (int)target.getY();
+		Board board = game.getBoard();
+		System.out.println("Got to moveBackboard");
+		Piece piece = board.getPiece((int)source.getY(), (int)source.getX());
+		System.out.println("I just moved: " + piece.getType() + " " + piece.getTeam());
+		if (game.isValidMove(piece, targetY, targetX))
+		{
+			board.move(piece, targetY, targetX);
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Moves the pieces on the GUI
+	 * @param source, the location of the piece we are moving
+	 * @param target, the destination of the piece we are moving
+	 */
+	public void moveGUIBoard(Point source, Point target)
+	{
+		int targetX = (int)target.getX();
+		int targetY = (int)target.getY();
+		Board board = game.getBoard();
+		System.out.println("Got to moveGUIBoard");
+		System.out.println("My targetX and targetY are: " + targetX + ", " + targetY);
+
+		System.out.println("Source coordinates: " + source.getX() + " " + source.getY());
+		System.out.println("The piece just moved was: " + board.getPiece(targetY, targetX).getType());
+		JLabel label = board.getPiece(targetY, targetX).getIcon();
+		gui.placeImage(label, targetX, targetY, sourcePanel);
+		sourcePanel.removeAll();
+		sourcePanel.validate();
+		sourcePanel.repaint();
+	}
+	
+	/**
+	 * Adds an actionlistener for the new game function
+	 */
+    public void addNewGameListener() {
+    	gui.addNewGameListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent event) {
+    			gui.resetBoard();
+    			game.resetGame();
+    	    }
+    	});
+    }
+    
+    /**
+     * Adds an actionlistener for the forfeit game function
+     */
+    public void addForfeitGameListener() {
+    	gui.addForfeitGameListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent event) {
+    			game.forfeitGame();
+    	    }
+    	});
+    }
+
+    /**
+     * Adds an actionListener for the undo function
+     */
+    public void addUndoListener() {
+    	gui.addUndoListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent event) {
+    			game.getBoard().undo();
+    			game.decrementTurn();
+    			gui.undo();
+    	    }
+    	});
+    }
+    
+    /**
+     * Adds an actionListener for the Tie function
+     */
+    public void addTieListener(){
+    	gui.addTieListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent event) {
+    			game.forceStalemate();
+    	    }
+    	});
+    }
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
+
+}

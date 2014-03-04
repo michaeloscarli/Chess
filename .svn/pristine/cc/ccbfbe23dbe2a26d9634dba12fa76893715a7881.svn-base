@@ -1,0 +1,54 @@
+package gui;
+import game.*;
+
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import pieces.*;
+import player.*;
+public class Controller implements MouseListener{
+	
+	Game game;
+	Gui gui;
+	
+	public Controller() {    	
+	    game = new Game();
+	    gui = new Gui(game.getBoard());	    
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		ModifiedJPanel panel = (ModifiedJPanel)arg0.getSource();
+		int x = panel.getRelativeX();
+	    int y = panel.getRelativeY();
+	    System.out.println(x + ", " + y);
+	    
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
+
+}
